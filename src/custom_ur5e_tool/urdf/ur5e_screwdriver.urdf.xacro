@@ -1,0 +1,207 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://wiki.ros.org/xacro" name="ur5e_screwdriver">
+
+  <xacro:arg name="name" default="ur"/>
+  <xacro:arg name="ur_type" default="ur5e"/>
+  <xacro:arg name="prefix" default=""/>
+  <xacro:arg name="sim_gazebo" default="false"/>
+  <xacro:arg name="sim_ignition" default="false"/>
+  <xacro:arg name="simulation_controllers" default=""/>
+  <xacro:arg name="safety_limits" default="true"/>
+  <xacro:arg name="safety_pos_margin" default="0.15"/>
+  <xacro:arg name="safety_k_position" default="20"/>
+  <xacro:arg name="initial_positions_file" default="$(find ur_description)/config/initial_positions.yaml"/>
+  <xacro:include filename="$(find ur_description)/urdf/ur_macro.xacro"/>
+  <xacro:include filename="$(find custom_ur5e_tool)/urdf/motherboard.urdf.xacro"/>
+
+  <link name="world" />
+
+  <link name="conveyor_link">
+    <visual>
+      <origin xyz="0.42 0 0.36" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.62 1.7 0.72"/>
+      </geometry>
+      <material name="conveyor_frame_dark">
+        <color rgba="0.12 0.13 0.13 1.0"/>
+      </material>
+    </visual>
+    <visual>
+      <origin xyz="0.42 0 0.735" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.66 1.78 0.035"/>
+      </geometry>
+      <material name="conveyor_belt_black">
+        <color rgba="0.015 0.017 0.018 1.0"/>
+      </material>
+    </visual>
+    <visual>
+      <origin xyz="0.42 0.68 0.762" rpy="1.5708 0 0"/>
+      <geometry>
+        <cylinder radius="0.035" length="0.68"/>
+      </geometry>
+      <material name="roller_steel">
+        <color rgba="0.55 0.58 0.58 1.0"/>
+      </material>
+    </visual>
+    <visual>
+      <origin xyz="0.42 -0.68 0.762" rpy="1.5708 0 0"/>
+      <geometry>
+        <cylinder radius="0.035" length="0.68"/>
+      </geometry>
+      <material name="roller_steel"/>
+    </visual>
+    <visual>
+      <origin xyz="0.09 0 0.79" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.025 1.78 0.08"/>
+      </geometry>
+      <material name="conveyor_rail_yellow">
+        <color rgba="1.0 0.62 0.02 1.0"/>
+      </material>
+    </visual>
+    <visual>
+      <origin xyz="0.75 0 0.79" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.025 1.78 0.08"/>
+      </geometry>
+      <material name="conveyor_rail_yellow">
+        <color rgba="1.0 0.62 0.02 1.0"/>
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0.42 0 0.36" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.66 1.78 0.72"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <mass value="100.0"/>
+      <origin xyz="0.42 0 0.36" rpy="0 0 0"/>
+      <inertia ixx="26.0" ixy="0.0" ixz="0.0" iyy="6.8" iyz="0.0" izz="31.4"/>
+    </inertial>
+  </link>
+
+  <joint name="world_to_conveyor" type="fixed">
+    <parent link="world"/>
+    <child link="conveyor_link"/>
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+  </joint>
+
+  <xacro:motherboard_board prefix="motherboard_queue_1" parent="world" x="0.42" y="0.48" z="0.755"/>
+  <xacro:motherboard_board prefix="motherboard_active" parent="world" x="0.42" y="0.0" z="0.755" active="true"/>
+  <xacro:motherboard_board prefix="motherboard_queue_2" parent="world" x="0.42" y="-0.48" z="0.755"/>
+
+  <xacro:ur_robot
+    name="$(arg name)"
+    tf_prefix="$(arg prefix)"
+    parent="world"
+    joint_limits_parameters_file="$(find ur_description)/config/$(arg ur_type)/joint_limits.yaml"
+    kinematics_parameters_file="$(find ur_description)/config/$(arg ur_type)/default_kinematics.yaml"
+    physical_parameters_file="$(find ur_description)/config/$(arg ur_type)/physical_parameters.yaml"
+    visual_parameters_file="$(find ur_description)/config/$(arg ur_type)/visual_parameters.yaml"
+    sim_gazebo="$(arg sim_gazebo)"
+    sim_ignition="$(arg sim_ignition)"
+    safety_limits="$(arg safety_limits)"
+    safety_pos_margin="$(arg safety_pos_margin)"
+    safety_k_position="$(arg safety_k_position)"
+    initial_positions="${xacro.load_yaml('$(arg initial_positions_file)')}">
+    <origin xyz="0 0 0.8" rpy="0 0 0"/>
+  </xacro:ur_robot>
+
+  <xacro:if value="$(arg sim_gazebo)">
+    <gazebo>
+      <plugin filename="libgazebo_ros2_control.so" name="gazebo_ros2_control">
+        <parameters>$(arg simulation_controllers)</parameters>
+      </plugin>
+    </gazebo>
+  </xacro:if>
+
+  <xacro:if value="$(arg sim_ignition)">
+    <gazebo>
+      <plugin filename="ign_ros2_control-system" name="ign_ros2_control::IgnitionROS2ControlPlugin">
+        <parameters>$(arg simulation_controllers)</parameters>
+        <controller_manager_node_name>$(arg prefix)controller_manager</controller_manager_node_name>
+      </plugin>
+    </gazebo>
+  </xacro:if>
+
+  <link name="screwdriver_link">
+    <visual>
+      <geometry>
+        <cylinder radius="0.025" length="0.04"/>
+      </geometry>
+      <origin xyz="0 0 0.02" rpy="0 0 0"/>
+      <material name="black">
+        <color rgba="0.2 0.2 0.2 1.0"/>
+      </material>
+    </visual>
+    
+    <visual>
+      <geometry>
+        <cylinder radius="0.006" length="0.05"/>
+      </geometry>
+      <origin xyz="0 0 0.065" rpy="0 0 0"/>
+      <material name="light_grey">
+        <color rgba="0.7 0.7 0.7 1.0"/>
+      </material>
+    </visual>
+    
+    <visual>
+      <geometry>
+        <box size="0.001 0.004 0.005"/>
+      </geometry>
+      <origin xyz="0 0 0.0925" rpy="0 0 0"/>
+      <material name="dark_metal">
+        <color rgba="0.4 0.4 0.4 1.0"/>
+      </material>
+    </visual>
+
+    <collision>
+      <geometry>
+        <cylinder radius="0.025" length="0.04"/>
+      </geometry>
+      <origin xyz="0 0 0.02" rpy="0 0 0"/>
+    </collision>
+
+    <collision>
+      <geometry>
+        <cylinder radius="0.006" length="0.05"/>
+      </geometry>
+      <origin xyz="0 0 0.065" rpy="0 0 0"/>
+    </collision>
+
+    <inertial>
+      <mass value="0.25"/>
+      <origin xyz="0 0 0.04" rpy="0 0 0"/>
+      <inertia ixx="0.0005" ixy="0.0" ixz="0.0" iyy="0.0005" iyz="0.0" izz="0.00005"/>
+    </inertial>
+  </link>
+
+  <joint name="screwdriver_joint" type="fixed">
+    <parent link="tool0"/>
+    <child link="screwdriver_link"/>
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+  </joint>
+
+  <link name="screwdriver_tip"/>
+
+  <joint name="screwdriver_tip_joint" type="fixed">
+    <parent link="screwdriver_link"/>
+    <child link="screwdriver_tip"/>
+    <origin xyz="0 0 0.095" rpy="0 0 0"/>
+  </joint>
+
+  <gazebo reference="screwdriver_link">
+    <material>Gazebo/Grey</material>
+  </gazebo>
+
+  <gazebo reference="conveyor_link">
+    <material>Gazebo/DarkGrey</material>
+  </gazebo>
+
+  <gazebo reference="motherboard_active_link">
+    <material>Gazebo/Green</material>
+  </gazebo>
+
+</robot>

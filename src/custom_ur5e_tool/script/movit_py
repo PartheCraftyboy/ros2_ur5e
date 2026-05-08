@@ -1,0 +1,248 @@
+#!/usr/bin/env python3
+
+import math
+import time
+
+import rclpy
+from geometry_msgs.msg import PoseStamped
+from moveit_msgs.action import MoveGroup
+from moveit_msgs.msg import (
+    Constraints,
+    JointConstraint,
+    MotionPlanRequest,
+    OrientationConstraint,
+    PlanningOptions,
+    PositionConstraint,
+)
+from rclpy.action import ActionClient
+from rclpy.duration import Duration
+from rclpy.node import Node
+from shape_msgs.msg import SolidPrimitive
+from tf2_ros import Buffer, TransformException, TransformListener
+
+
+GROUP_NAME = "ur_manipulator"
+EE_LINK = "screwdriver_tip"
+BASE_FRAME = "base_link"
+TARGET_FRAMES = [
+    "screw_point_1",
+    "screw_point_2",
+    "screw_point_3",
+    "screw_point_4",
+    "screw_point_5",
+    "screw_point_6",
+]
+WRIST_3_JOINT = "wrist_3_joint"
+HOME_JOINTS = {
+    "shoulder_pan_joint": 0.0,
+    "shoulder_lift_joint": -1.5707,
+    "elbow_joint": 0.0,
+    "wrist_1_joint": -1.5707,
+    "wrist_2_joint": 0.0,
+    "wrist_3_joint": 0.0,
+}
+READY_JOINTS = {
+    "shoulder_pan_joint": 0.0,
+    "shoulder_lift_joint": -1.35,
+    "elbow_joint": 1.55,
+    "wrist_1_joint": -1.75,
+    "wrist_2_joint": -1.5707,
+    "wrist_3_joint": 0.0,
+}
+APPROACH_Z_OFFSET = 0.10
+DRIVE_Z_OFFSET = 0.025
+
+
+def make_pose_from_transform(transform, z_offset):
+    pose = PoseStamped()
+    pose.header.frame_id = BASE_FRAME
+    pose.pose.position.x = transform.transform.translation.x
+    pose.pose.position.y = transform.transform.translation.y
+    pose.pose.position.z = transform.transform.translation.z + z_offset
+    pose.pose.orientation.x = 0.0
+    pose.pose.orientation.y = 1.0
+    pose.pose.orientation.z = 0.0
+    pose.pose.orientation.w = 0.0
+    return pose
+
+
+def joint_constraints(goal_joints, tolerance=0.01):
+    constraints = Constraints()
+    for name, position in goal_joints.items():
+        constraint = JointConstraint()
+        constraint.joint_name = name
+        constraint.position = float(position)
+        constraint.tolerance_above = tolerance
+        constraint.tolerance_below = tolerance
+        constraint.weight = 1.0
+        constraints.joint_constraints.append(constraint)
+    return constraints
+
+
+def pose_constraints(target_pose, position_tolerance=0.018):
+    constraints = Constraints()
+
+    primitive = SolidPrimitive()
+    primitive.type = SolidPrimitive.BOX
+    primitive.dimensions = [position_tolerance, position_tolerance, position_tolerance]
+
+    position = PositionConstraint()
+    position.header.frame_id = target_pose.header.frame_id
+    position.link_name = EE_LINK
+    position.constraint_region.primitives.append(primitive)
+    position.constraint_region.primitive_poses.append(target_pose.pose)
+    position.weight = 1.0
+    constraints.position_constraints.append(position)
+
+    orientation = OrientationConstraint()
+    orientation.header.frame_id = target_pose.header.frame_id
+    orientation.link_name = EE_LINK
+    orientation.orientation = target_pose.pose.orientation
+    orientation.absolute_x_axis_tolerance = 0.45
+    orientation.absolute_y_axis_tolerance = 0.45
+    orientation.absolute_z_axis_tolerance = math.pi
+    orientation.weight = 0.35
+    constraints.orientation_constraints.append(orientation)
+
+    return constraints
+
+
+class MoveGroupCommander(Node):
+    def __init__(self):
+        super().__init__("ur5e_screwdriver_task")
+        self.client = ActionClient(self, MoveGroup, "move_action")
+        self.current_joints = dict(HOME_JOINTS)
+
+    def wait_for_move_group(self):
+        self.get_logger().info("Waiting for MoveIt move_action server")
+        self.client.wait_for_server()
+
+    def execute_constraints(self, constraints, label):
+        request = MotionPlanRequest()
+        request.group_name = GROUP_NAME
+        request.num_planning_attempts = 20
+        request.allowed_planning_time = 8.0
+        request.max_velocity_scaling_factor = 0.18
+        request.max_acceleration_scaling_factor = 0.18
+        request.goal_constraints.append(constraints)
+        request.pipeline_id = "move_group"
+        request.planner_id = "RRTConnectkConfigDefault"
+
+        options = PlanningOptions()
+        options.plan_only = False
+        options.replan = True
+        options.replan_attempts = 3
+        options.planning_scene_diff.is_diff = True
+        options.planning_scene_diff.robot_state.is_diff = True
+
+        goal = MoveGroup.Goal()
+        goal.request = request
+        goal.planning_options = options
+
+        self.get_logger().info(f"Planning and executing: {label}")
+        send_future = self.client.send_goal_async(goal)
+        rclpy.spin_until_future_complete(self, send_future)
+        goal_handle = send_future.result()
+        if goal_handle is None or not goal_handle.accepted:
+            self.get_logger().warn(f"MoveGroup rejected goal: {label}")
+            return False
+
+        result_future = goal_handle.get_result_async()
+        rclpy.spin_until_future_complete(self, result_future)
+        result = result_future.result().result
+        if result.error_code.val != result.error_code.SUCCESS:
+            self.get_logger().warn(
+                f"MoveGroup failed {label} with error code {result.error_code.val}"
+            )
+            return False
+
+        return True
+
+    def go_to_joints(self, joints, label):
+        if self.execute_constraints(joint_constraints(joints), label):
+            self.current_joints.update(joints)
+            return True
+        return False
+
+    def go_to_pose(self, pose, label, position_tolerance=0.018):
+        return self.execute_constraints(pose_constraints(pose, position_tolerance), label)
+
+    def rotate_wrist_once(self):
+        current = self.current_joints.get(WRIST_3_JOINT, 0.0)
+        if current > 0.0:
+            target = current - 2.0 * math.pi
+        else:
+            target = current + 2.0 * math.pi
+
+        joints = dict(self.current_joints)
+        joints[WRIST_3_JOINT] = target
+        return self.go_to_joints(joints, "360 degree wrist-3 screw rotation")
+
+
+def main():
+    rclpy.init()
+    node = MoveGroupCommander()
+    node.wait_for_move_group()
+
+    tf_buffer = Buffer()
+    TransformListener(tf_buffer, node)
+
+    node.get_logger().info("Waiting for all six screw point transforms")
+    screw_transforms = {}
+    while rclpy.ok() and len(screw_transforms) < len(TARGET_FRAMES):
+        rclpy.spin_once(node, timeout_sec=0.1)
+        for target_frame in TARGET_FRAMES:
+            if target_frame in screw_transforms:
+                continue
+            try:
+                screw_transforms[target_frame] = tf_buffer.lookup_transform(
+                    BASE_FRAME, target_frame, rclpy.time.Time(), timeout=Duration(seconds=0.25)
+                )
+                node.get_logger().info(f"Found transform for {target_frame}")
+            except TransformException:
+                pass
+        time.sleep(0.1)
+
+    node.get_logger().info("Starting six-screw motherboard cycle")
+    try:
+        board_count = 1
+        while rclpy.ok():
+            node.go_to_joints(READY_JOINTS, "ready above conveyor")
+
+            completed_screws = 0
+            for target_frame in TARGET_FRAMES:
+                screw_tf = screw_transforms[target_frame]
+                approach_pose = make_pose_from_transform(screw_tf, APPROACH_Z_OFFSET)
+                process_pose = make_pose_from_transform(screw_tf, DRIVE_Z_OFFSET)
+
+                if not node.go_to_pose(approach_pose, f"approach {target_frame}"):
+                    node.get_logger().warn(f"Skipping {target_frame}; approach is not reachable")
+                    continue
+                if not node.go_to_pose(process_pose, f"drive {target_frame}", 0.022):
+                    node.get_logger().warn(f"Skipping {target_frame}; drive pose is not reachable")
+                    node.go_to_pose(approach_pose, f"recover above {target_frame}")
+                    continue
+
+                if node.rotate_wrist_once():
+                    completed_screws += 1
+                node.go_to_pose(approach_pose, f"retract from {target_frame}")
+
+            node.go_to_joints(READY_JOINTS, "clear conveyor for board indexing")
+            if completed_screws == len(TARGET_FRAMES):
+                node.get_logger().info(
+                    f"Motherboard {board_count} complete; conveyor indexes to next board"
+                )
+                board_count += 1
+            else:
+                node.get_logger().warn(
+                    f"Completed {completed_screws}/{len(TARGET_FRAMES)} screws; keeping cycle running"
+                )
+    except KeyboardInterrupt:
+        node.get_logger().info("Task interrupted by user")
+    finally:
+        node.destroy_node()
+        rclpy.shutdown()
+
+
+if __name__ == "__main__":
+    main()

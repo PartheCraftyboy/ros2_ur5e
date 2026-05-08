@@ -1,0 +1,12 @@
+build/
+install/
+log/
+
+*.pyc
+__pycache__/
+
+.colcon/
+.pytest_cache/
+
+src/Universal_Robots_ROS2_Description/
+src/Universal_Robots_ROS2_Gazebo_Simulation/

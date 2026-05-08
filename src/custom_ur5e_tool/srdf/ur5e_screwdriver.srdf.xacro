@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<robot xmlns:xacro="http://wiki.ros.org/xacro" name="ur5e_screwdriver">
+  <xacro:arg name="name" default="ur"/>
+  <xacro:arg name="prefix" default=""/>
+  <xacro:property name="robot_name" value="$(arg name)"/>
+  <xacro:property name="tf_prefix" value="$(arg prefix)"/>
+
+  <group name="${tf_prefix}${robot_name}_manipulator">
+    <chain base_link="${tf_prefix}base_link" tip_link="${tf_prefix}screwdriver_tip"/>
+  </group>
+
+  <group_state name="${tf_prefix}home" group="${tf_prefix}${robot_name}_manipulator">
+    <joint name="${tf_prefix}shoulder_pan_joint" value="0.0"/>
+    <joint name="${tf_prefix}shoulder_lift_joint" value="-1.5707"/>
+    <joint name="${tf_prefix}elbow_joint" value="0.0"/>
+    <joint name="${tf_prefix}wrist_1_joint" value="-1.5707"/>
+    <joint name="${tf_prefix}wrist_2_joint" value="0.0"/>
+    <joint name="${tf_prefix}wrist_3_joint" value="0.0"/>
+  </group_state>
+
+  <disable_collisions link1="${tf_prefix}base_link" link2="${tf_prefix}base_link_inertia" reason="Adjacent"/>
+  <disable_collisions link1="${tf_prefix}base_link_inertia" link2="${tf_prefix}shoulder_link" reason="Adjacent"/>
+  <disable_collisions link1="${tf_prefix}tool0" link2="${tf_prefix}wrist_1_link" reason="Never"/>
+  <disable_collisions link1="${tf_prefix}tool0" link2="${tf_prefix}wrist_2_link" reason="Never"/>
+  <disable_collisions link1="${tf_prefix}tool0" link2="${tf_prefix}wrist_3_link" reason="Adjacent"/>
+  <disable_collisions link1="${tf_prefix}tool0" link2="${tf_prefix}screwdriver_link" reason="Adjacent"/>
+  <disable_collisions link1="${tf_prefix}screwdriver_link" link2="${tf_prefix}screwdriver_tip" reason="Adjacent"/>
+  <disable_collisions link1="${tf_prefix}screwdriver_link" link2="${tf_prefix}wrist_3_link" reason="Never"/>
+  <disable_collisions link1="${tf_prefix}forearm_link" link2="${tf_prefix}upper_arm_link" reason="Adjacent"/>
+  <disable_collisions link1="${tf_prefix}forearm_link" link2="${tf_prefix}wrist_1_link" reason="Adjacent"/>
+  <disable_collisions link1="${tf_prefix}shoulder_link" link2="${tf_prefix}upper_arm_link" reason="Adjacent"/>
+  <disable_collisions link1="${tf_prefix}wrist_1_link" link2="${tf_prefix}wrist_2_link" reason="Adjacent"/>
+  <disable_collisions link1="${tf_prefix}wrist_1_link" link2="${tf_prefix}wrist_3_link" reason="Never"/>
+  <disable_collisions link1="${tf_prefix}wrist_2_link" link2="${tf_prefix}wrist_3_link" reason="Adjacent"/>
+  <disable_collisions link1="conveyor_link" link2="motherboard_active_link" reason="Adjacent"/>
+  <disable_collisions link1="conveyor_link" link2="motherboard_queue_1_link" reason="Adjacent"/>
+  <disable_collisions link1="conveyor_link" link2="motherboard_queue_2_link" reason="Adjacent"/>
+</robot>

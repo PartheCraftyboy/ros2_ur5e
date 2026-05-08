@@ -1,0 +1,62 @@
+<?xml version="1.0" ?>
+<sdf version="1.7">
+  <world name="ur5e_lab_room">
+    <include>
+      <uri>model://sun</uri>
+    </include>
+
+    <include>
+      <uri>model://ground_plane</uri>
+    </include>
+
+    <physics type="ode">
+      <max_step_size>0.001</max_step_size>
+      <real_time_factor>1.0</real_time_factor>
+      <real_time_update_rate>1000</real_time_update_rate>
+    </physics>
+
+    <model name="lab_room_walls">
+      <static>true</static>
+      <link name="walls">
+        <visual name="back_wall">
+          <pose>3 0 1.25 0 0 0</pose>
+          <geometry>
+            <box>
+              <size>0.1 5.0 2.5</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.8 0.82 0.82 1</ambient>
+            <diffuse>0.8 0.82 0.82 1</diffuse>
+          </material>
+        </visual>
+
+        <visual name="left_wall">
+          <pose>0 2.5 1.25 0 0 0</pose>
+          <geometry>
+            <box>
+              <size>6.0 0.1 2.5</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.78 0.8 0.82 1</ambient>
+            <diffuse>0.78 0.8 0.82 1</diffuse>
+          </material>
+        </visual>
+
+        <visual name="right_wall">
+          <pose>0 -2.5 1.25 0 0 0</pose>
+          <geometry>
+            <box>
+              <size>6.0 0.1 2.5</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.78 0.8 0.82 1</ambient>
+            <diffuse>0.78 0.8 0.82 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+  </world>
+</sdf>

@@ -1,0 +1,158 @@
+<?xml version="1.0" ?>
+<sdf version="1.7">
+  <world name="warehouse_world">
+    <include>
+      <uri>model://sun</uri>
+    </include>
+    <include>
+      <uri>model://ground_plane</uri>
+    </include>
+
+    <physics type="ode">
+      <max_step_size>0.001</max_step_size>
+      <real_time_factor>1.0</real_time_factor>
+      <real_time_update_rate>1000</real_time_update_rate>
+    </physics>
+
+    <scene>
+      <ambient>0.55 0.55 0.55 1</ambient>
+      <background>0.78 0.82 0.86 1</background>
+      <shadows>true</shadows>
+    </scene>
+
+    <light name="overhead_strip_1" type="point">
+      <pose>0 0 3.4 0 0 0</pose>
+      <diffuse>0.95 0.95 0.9 1</diffuse>
+      <specular>0.2 0.2 0.2 1</specular>
+      <attenuation>
+        <range>7.0</range>
+        <constant>0.5</constant>
+        <linear>0.02</linear>
+        <quadratic>0.002</quadratic>
+      </attenuation>
+    </light>
+    <light name="overhead_strip_2" type="point">
+      <pose>2.2 0 3.4 0 0 0</pose>
+      <diffuse>0.95 0.95 0.9 1</diffuse>
+      <specular>0.2 0.2 0.2 1</specular>
+      <attenuation>
+        <range>7.0</range>
+        <constant>0.5</constant>
+        <linear>0.02</linear>
+        <quadratic>0.002</quadratic>
+      </attenuation>
+    </light>
+
+    <model name="closed_fulfillment_room">
+      <static>true</static>
+      <link name="room_shell">
+        <visual name="back_wall">
+          <pose>3.1 0 1.7 0 0 0</pose>
+          <geometry><box><size>0.12 5.6 3.4</size></box></geometry>
+          <material>
+            <ambient>0.82 0.84 0.84 1</ambient>
+            <diffuse>0.82 0.84 0.84 1</diffuse>
+          </material>
+        </visual>
+        <collision name="back_wall_collision">
+          <pose>3.1 0 1.7 0 0 0</pose>
+          <geometry><box><size>0.12 5.6 3.4</size></box></geometry>
+        </collision>
+
+        <visual name="front_wall_low">
+          <pose>-1.25 0 0.6 0 0 0</pose>
+          <geometry><box><size>0.12 5.6 1.2</size></box></geometry>
+          <material>
+            <ambient>0.74 0.76 0.76 1</ambient>
+            <diffuse>0.74 0.76 0.76 1</diffuse>
+          </material>
+        </visual>
+        <collision name="front_wall_collision">
+          <pose>-1.25 0 0.6 0 0 0</pose>
+          <geometry><box><size>0.12 5.6 1.2</size></box></geometry>
+        </collision>
+
+        <visual name="left_wall">
+          <pose>0.9 2.8 1.7 0 0 0</pose>
+          <geometry><box><size>4.4 0.12 3.4</size></box></geometry>
+          <material>
+            <ambient>0.78 0.8 0.8 1</ambient>
+            <diffuse>0.78 0.8 0.8 1</diffuse>
+          </material>
+        </visual>
+        <collision name="left_wall_collision">
+          <pose>0.9 2.8 1.7 0 0 0</pose>
+          <geometry><box><size>4.4 0.12 3.4</size></box></geometry>
+        </collision>
+
+        <visual name="right_wall">
+          <pose>0.9 -2.8 1.7 0 0 0</pose>
+          <geometry><box><size>4.4 0.12 3.4</size></box></geometry>
+          <material>
+            <ambient>0.78 0.8 0.8 1</ambient>
+            <diffuse>0.78 0.8 0.8 1</diffuse>
+          </material>
+        </visual>
+        <collision name="right_wall_collision">
+          <pose>0.9 -2.8 1.7 0 0 0</pose>
+          <geometry><box><size>4.4 0.12 3.4</size></box></geometry>
+        </collision>
+
+        <visual name="floor_marking_center">
+          <pose>0.42 0 0.012 0 0 0</pose>
+          <geometry><box><size>0.08 2.2 0.01</size></box></geometry>
+          <material>
+            <ambient>1.0 0.62 0.02 1</ambient>
+            <diffuse>1.0 0.62 0.02 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <model name="warehouse_storage_racks">
+      <static>true</static>
+      <link name="racks">
+        <visual name="rack_left_frame">
+          <pose>1.7 2.15 1.15 0 0 0</pose>
+          <geometry><box><size>1.8 0.08 2.3</size></box></geometry>
+          <material><ambient>0.1 0.1 0.1 1</ambient><diffuse>0.1 0.1 0.1 1</diffuse></material>
+        </visual>
+        <visual name="rack_right_frame">
+          <pose>1.7 -2.15 1.15 0 0 0</pose>
+          <geometry><box><size>1.8 0.08 2.3</size></box></geometry>
+          <material><ambient>0.1 0.1 0.1 1</ambient><diffuse>0.1 0.1 0.1 1</diffuse></material>
+        </visual>
+        <visual name="left_box_stack_1">
+          <pose>1.2 2.05 0.55 0 0 0</pose>
+          <geometry><box><size>0.42 0.34 0.32</size></box></geometry>
+          <material><ambient>0.56 0.39 0.2 1</ambient><diffuse>0.56 0.39 0.2 1</diffuse></material>
+        </visual>
+        <visual name="left_box_stack_2">
+          <pose>1.75 2.05 1.05 0 0 0</pose>
+          <geometry><box><size>0.48 0.34 0.36</size></box></geometry>
+          <material><ambient>0.64 0.47 0.27 1</ambient><diffuse>0.64 0.47 0.27 1</diffuse></material>
+        </visual>
+        <visual name="right_box_stack_1">
+          <pose>1.2 -2.05 0.55 0 0 0</pose>
+          <geometry><box><size>0.42 0.34 0.32</size></box></geometry>
+          <material><ambient>0.56 0.39 0.2 1</ambient><diffuse>0.56 0.39 0.2 1</diffuse></material>
+        </visual>
+        <visual name="right_box_stack_2">
+          <pose>1.75 -2.05 1.05 0 0 0</pose>
+          <geometry><box><size>0.48 0.34 0.36</size></box></geometry>
+          <material><ambient>0.64 0.47 0.27 1</ambient><diffuse>0.64 0.47 0.27 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+
+    <model name="safety_posts">
+      <static>true</static>
+      <link name="posts">
+        <visual name="post_1"><pose>-0.05 1.15 0.45 0 0 0</pose><geometry><cylinder><radius>0.035</radius><length>0.9</length></cylinder></geometry><material><ambient>1 0.62 0.02 1</ambient><diffuse>1 0.62 0.02 1</diffuse></material></visual>
+        <visual name="post_2"><pose>0.95 1.15 0.45 0 0 0</pose><geometry><cylinder><radius>0.035</radius><length>0.9</length></cylinder></geometry><material><ambient>1 0.62 0.02 1</ambient><diffuse>1 0.62 0.02 1</diffuse></material></visual>
+        <visual name="post_3"><pose>-0.05 -1.15 0.45 0 0 0</pose><geometry><cylinder><radius>0.035</radius><length>0.9</length></cylinder></geometry><material><ambient>1 0.62 0.02 1</ambient><diffuse>1 0.62 0.02 1</diffuse></material></visual>
+        <visual name="post_4"><pose>0.95 -1.15 0.45 0 0 0</pose><geometry><cylinder><radius>0.035</radius><length>0.9</length></cylinder></geometry><material><ambient>1 0.62 0.02 1</ambient><diffuse>1 0.62 0.02 1</diffuse></material></visual>
+      </link>
+    </model>
+  </world>
+</sdf>
