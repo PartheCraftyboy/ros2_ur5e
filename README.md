@@ -45,8 +45,14 @@ The project follows a standard ROS 2 architecture:
 1.  **Launch Gazebo and MoveIt:**
     ```bash
     ros2 launch custom_ur5e_tool ur5e_lab_moveit_gazebo.launch.py run_autonomous_task:=false
+    
     ```
-2.  **Run the Scene and Autonomy Script:**
+2.  **After run the Autonomy Script:**
+    ```bash
+    ros2 run custom_ur5e_tool movit_py
+    ```
+    
+3.  **Run the Scene and Autonomy Script:**
     ```bash
     ros2 launch custom_ur5e_tool ur5e_lab_moveit_gazebo.launch.py run_autonomous_task:=true
     ```
