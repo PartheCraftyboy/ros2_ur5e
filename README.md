@@ -44,11 +44,11 @@ The project follows a standard ROS 2 architecture:
 ## 🎮 Running the Simulation
 1.  **Launch Gazebo and MoveIt:**
     ```bash
-    ros2 launch ur5_assembly_bringup main_launch.py
+    ros2 launch custom_ur5e_tool ur5e_lab_moveit_gazebo.launch.py run_autonomous_task:=false
     ```
-2.  **Run the Autonomy Script:**
+2.  **Run the Scene and Autonomy Script:**
     ```bash
-    ros2 run ur5_assembly_logic screw_loop_node
+    ros2 launch custom_ur5e_tool ur5e_lab_moveit_gazebo.launch.py run_autonomous_task:=true
     ```
 
 ## 👥 Group Effort
@@ -57,10 +57,6 @@ This project was developed as a collaborative effort:
 * **Developer B:** Gazebo World Design & URDF/Xacro Integration.
 * **Developer C:** MoveIt 2 Configuration & Kinematic Tuning.
 
-## 📜 Future Scope
-* Integration of Computer Vision (OpenCV) for dynamic screw hole detection.
-* Implementation of Force/Torque feedback for real-world hardware-in-the-loop testing.
-* Multi-screw coordinate sequencing from a CSV configuration file.
 
 ---
 Developed for the **Robotics and Automation** course.
