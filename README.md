@@ -51,12 +51,6 @@ The project follows a standard ROS 2 architecture:
     ros2 launch custom_ur5e_tool ur5e_lab_moveit_gazebo.launch.py run_autonomous_task:=true
     ```
 
-## 👥 Group Effort
-This project was developed as a collaborative effort:
-* **Developer A:** ROS 2 Node Architecture & Motion Logic.
-* **Developer B:** Gazebo World Design & URDF/Xacro Integration.
-* **Developer C:** MoveIt 2 Configuration & Kinematic Tuning.
-
 
 ---
 Developed for the **Robotics and Automation** course.
